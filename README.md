@@ -31,7 +31,7 @@
 
 ## 📌 Etapa 3: Preparação do Banco de Dados (RDS)
 - Motor escolhido: **MySQL**.
-- Versão: `MySQL 8.x`.
+- Versão: `MySQL 8.0.42`.
 - Modo de implantação: **Multi-AZ DB instance deployment (2 instances)** para alta disponibilidade.
 - Criado **DB Subnet Group dedicado**:
   - Nome: `wordpress-db-subnet-group`.
