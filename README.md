@@ -106,6 +106,6 @@ Limpeza: Encerrar (Terminate) a instância de teste e remover as regras temporá
 
 Organizar Security Groups para Produção: Criar um novo SG para o Load Balancer (alb-sg-wordpress) e ajustar o ec2-sg-wordpress para aceitar tráfego apenas do alb-sg.
 
-Criar o Auto Scaling Group usando o Launch Template wordpress-docker-lt.
+Criar o Auto Scaling Group usando o Launch Template wordpress-docker-launcher-template.
 
 Criar o Application Load Balancer (ALB) para distribuir o tráfego.
