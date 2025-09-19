@@ -1,118 +1,111 @@
 # 🖥️ Infraestrutura WordPress - AWS
 
-## 📌 Etapa 1: Criação da VPC
+📌 Etapa 1: Criação da VPC
+Criada uma VPC dedicada chamada WordPress-VPC com o bloco CIDR 10.0.0.0/16.
 
-Criada uma **VPC dedicada** chamada `WordPress-VPC` com o bloco CIDR `10.0.0.0/16`.
+Configurações habilitadas:
 
-**Configurações habilitadas:**
-- 2 zonas de disponibilidade (`us-east-1a` e `us-east-1b`)
-- Subnets públicas e privadas
-- Internet Gateway para comunicação externa
-- Rotas configuradas automaticamente
+2 zonas de disponibilidade (us-east-1a e us-east-1b)
 
-### 🔖 Tags aplicadas
-- `Project: WordPress`
-- `CostCenter: valor`
-- `Owner: Thiago`
+Subnets públicas e privadas
 
-## 📌 Etapa 2: Criação de Subnets
+Internet Gateway para comunicação externa
 
-Foram criadas **4 subnets** dentro da VPC:
+Rotas e NAT Gateways para acesso à internet
 
-### 🌐 Subnets Públicas
-- `WordPress-VPC-subnet-public1-us-east-1a` → `10.0.1.0/24`
-- `WordPress-VPC-subnet-public2-us-east-1b` → `10.0.2.0/24`
+🔖 Tags aplicadas
+Project: WordPress
 
-### 🔒 Subnets Privadas
-- `WordPress-VPC-subnet-private1-us-east-1a` → `10.0.3.0/24`
-- `WordPress-VPC-subnet-private2-us-east-1b` → `10.0.4.0/24`
+CostCenter: valor
 
-### 📌 Funções
-- **Públicas** → usadas pelo **Application Load Balancer (ALB)**
-- **Privadas** → usadas pelas **instâncias EC2 (WordPress)** e pelo **banco de dados (RDS)**
+Owner: Thiago
 
-## 📌 Etapa 3: Criação do Banco de Dados (RDS)
+📌 Etapa 2: Criação de Subnets
+Foram criadas 4 subnets dentro da VPC:
 
-**Especificações técnicas:**
-- **Motor**: MySQL (`8.0.42`, tipo `db.t3g.micro`)
-- **Multi-AZ**: desabilitado (restrição do projeto para controle de custos)
-- **DB Subnet Group**: `wordpress-db-subnet-group`, associado apenas às subnets privadas
-- **Acesso**: Sem acesso público (`Public access: No`), controlado via **Security Group**
-- **Status**: **Iniciado (Running)** para a fase de testes
+🌐 Subnets Públicas
+WordPress-VPC-subnet-public1-us-east-1a → 10.0.1.0/24
 
-## 📌 Etapa 4: Configuração dos Security Groups
+WordPress-VPC-subnet-public2-us-east-1b → 10.0.2.0/24
 
-Criados **3 grupos de segurança** para isolar camadas:
+🔒 Subnets Privadas
+WordPress-VPC-subnet-private1-us-east-1a → 10.0.3.0/24
 
-- **`ec2-sg-wordpress`** → associado às instâncias EC2
-- **`SG-RDS-WordPress`** → associado ao RDS, permite tráfego na porta `3306` **apenas do grupo** `ec2-sg-wordpress`
-- **`efs-sg-wordpress`** → associado ao EFS, permite tráfego na porta `2049` (NFS) **apenas do grupo** `ec2-sg-wordpress`
+WordPress-VPC-subnet-private2-us-east-1b → 10.0.4.0/24
 
-## 📌 Etapa 5: Criação do Sistema de Arquivos (EFS)
+📌 Funções
+Públicas → usadas pelo Application Load Balancer (ALB)
 
-**Configuração do EFS:**
-- **File System**: `wordpress-efs` (Regional)
-- **Mount Targets**: criados dentro das subnets privadas (um por AZ)
-- **Segurança**: acessível apenas pelo grupo `ec2-sg-wordpress`
-- **Status**: **Criado e Disponível**
+Privadas → usadas pelas instâncias EC2 (WordPress) e pelo banco de dados (RDS)
 
-## 📌 Etapa 6: Criação do Launch Template
+📌 Etapa 3: Criação do Banco de Dados (RDS)
+Motor: MySQL (8.0.42, tipo db.t3g.micro)
 
-Criado o template `wordpress-launch-template-v2` para definir a configuração das instâncias EC2.
+Multi-AZ: desabilitado (restrição do projeto)
 
-### **Configurações principais:**
-- **AMI**: Amazon Linux 2
-- **Instance Type**: `t2.micro`
-- **Security Group**: `ec2-sg-wordpress`
-- **Tags**: `Project`, `CostCenter`, `Owner` e `Name` aplicadas na instância e volume
-- **User Data**: Script configurado para instalar Apache/PHP, montar o EFS e conectar ao RDS automaticamente
+DB Subnet Group: wordpress-db-subnet-group, associado apenas às subnets privadas
 
-## ✅ Status Atual e Pendências
+Acesso: Sem acesso público (Public access: No), controlado via Security Group
 
-**Progresso completado:**
-- Toda a infraestrutura base (VPC, RDS, EFS, SGs) e o Launch Template foram criados
-- Uma **instância EC2 de teste** foi lançada com sucesso a partir do template em uma subnet pública para validação
+Status: Iniciado (Available)
 
-**⚠️ Problema Atual:**
-Ao tentar acessar o IP Público da instância de teste, ocorre um erro de **timeout** (`ERR_CONNECTION_TIMED_OUT`), impedindo a validação da instalação do WordPress.
+📌 Etapa 4: Configuração dos Security Groups
+Criados 3 grupos de segurança para isolar camadas:
 
-## 🚀 Próximos Passos
+ec2-sg-wordpress → associado às instâncias EC2
 
-### 1. **Reativar o Ambiente**
+SG-RDS-WordPress → associado ao RDS, permite tráfego na porta 3306 apenas do grupo ec2-sg-wordpress
 
-Antes de continuar o troubleshooting, é preciso reativar os serviços que foram pausados para economizar custos.
+efs-sg-wordpress → associado ao EFS, permite tráfego na porta 2049 (NFS) apenas do grupo ec2-sg-wordpress
 
-**Iniciar a Instância RDS:**
-- Vá ao console do RDS e dê "Start" na instância `wordpress-db`
-- Aguarde até que o status seja "Available"
+📌 Etapa 5: Criação do Sistema de Arquivos (EFS)
+File System: wordpress-efs (Regional)
 
-**Recriar os NAT Gateways:**
-- Crie um novo NAT Gateway em cada uma das suas **subnets públicas**
-- Lembre-se de alocar um novo Elastic IP para cada um
+Mount Targets: criados dentro das subnets privadas (um por AZ)
 
-**Atualizar as Tabelas de Rotas:**
-- Vá nas tabelas de rotas das suas **subnets privadas**
-- Atualize a rota `0.0.0.0/0` para apontar para os novos NAT Gateways correspondentes
+Segurança: acessível apenas pelo grupo ec2-sg-wordpress
 
-### 2. **Resolver o Problema de Conexão (Troubleshooting)**
+Status: Criado e Disponível
 
-Com o ambiente ativo, o próximo passo é recriar o cenário do teste para investigar o erro de timeout.
+📌 Etapa 6: Criação do Launch Template (Docker)
+Mudança de Estratégia: A abordagem foi alterada para utilizar Docker e Docker Compose, seguindo novas diretrizes do projeto.
 
-**Lançar a Instância de Teste:**
-- Lance uma nova instância a partir do `wordpress-launch-template-v2` em uma **subnet pública**
-- Garanta que ela receba um IP Público
+Criado o template wordpress-docker-lt para as instâncias EC2.
 
-**Configurar Acesso Temporário:**
-- Adicione as regras `HTTP` e `SSH` (com origem `My IP`) ao security group `ec2-sg-wordpress`
+Configurações principais:
 
-**Investigação:**
-- **Ação Imediata**: Conectar na instância de teste via **SSH**
-- Verificar o status do serviço Apache (`httpd`) com o comando `systemctl status httpd`
-- Analisar os logs de inicialização (`/var/log/cloud-init-output.log`) para encontrar possíveis erros na execução do script `user-data`
+AMI: Ubuntu Server 22.04 LTS
 
-### 3. **Continuar o Projeto (Após a solução do problema)**
+Instance Type: t2.micro
 
-- Validar o acesso e a instalação do WordPress pelo navegador
-- Terminar a instância de teste e remover as regras temporárias do Security Group
-- Criar o **Auto Scaling Group**
-- Criar o **Application Load Balancer**
+Security Group: ec2-sg-wordpress
+
+Tags: Project, CostCenter, Owner e Name aplicadas.
+
+User Data: Script configurado para instalar Docker, Docker Compose, montar o EFS e iniciar o contêiner do WordPress conectado ao RDS.
+
+✅ Status Atual e Pendências
+A infraestrutura base (VPC, RDS, EFS, SGs) e o novo Launch Template com Docker foram criados com sucesso.
+
+Uma instância EC2 de teste foi lançada, superando os desafios de permissão (SCP) anteriores.
+
+Problema Atual: A instância, apesar de rodar o contêiner do WordPress, exibe o erro "Error establishing a database connection".
+
+Diagnóstico: A investigação via SSH revelou que o problema é uma falha de sincronia entre a montagem do EFS no servidor e o serviço do Docker que não o enxergava corretamente. A última ação executada foi reiniciar o serviço do Docker e recriar o contêiner para forçar o reconhecimento do volume EFS.
+
+🚀 Próximos Passos
+Validação Final da Solução:
+
+Ação Imediata: Acessar o IP Público da instância de teste no navegador para verificar se a última correção (reiniciar o Docker) resolveu o erro de conexão com o banco de dados.
+
+Continuar o Projeto (Após a solução do problema):
+
+Sucesso! Validar a página de instalação do WordPress.
+
+Limpeza: Encerrar (Terminate) a instância de teste e remover as regras temporárias de HTTP/SSH do ec2-sg-wordpress.
+
+Organizar Security Groups para Produção: Criar um novo SG para o Load Balancer (alb-sg-wordpress) e ajustar o ec2-sg-wordpress para aceitar tráfego apenas do alb-sg.
+
+Criar o Auto Scaling Group usando o Launch Template wordpress-docker-lt.
+
+Criar o Application Load Balancer (ALB) para distribuir o tráfego.
