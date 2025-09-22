@@ -11,7 +11,7 @@ Este documento descreve a implementação de uma infraestrutura completa para Wo
 ### 📌 Etapa 1: Criação da VPC
 **Status:** ✅ **Concluído**
 
-Foi criada uma **VPC dedicada** chamada `WordPress-VPC` com o bloco CIDR `10.0.0.0/16` através do assistente "VPC and more".
+Foi criada uma VPC dedicada chamada **WordPress-VPC** com o bloco CIDR `10.0.0.0/16` através do assistente "VPC and more".
 
 **Recursos Provisionados:**
 - 2 Zonas de Disponibilidade (`us-east-1a` e `us-east-1b`)
@@ -25,7 +25,7 @@ Foi criada uma **VPC dedicada** chamada `WordPress-VPC` com o bloco CIDR `10.0.0
 ### 📌 Etapa 2: Security Groups
 **Status:** ✅ **Concluído**
 
-Foram criados **4 grupos de segurança** para implementar uma arquitetura de rede segura em camadas:
+Foram criados 4 grupos de segurança para implementar uma arquitetura de rede segura em camadas:
 
 | Security Group | Função | Regras de Entrada |
 |---|---|---|
@@ -39,10 +39,10 @@ Foram criados **4 grupos de segurança** para implementar uma arquitetura de red
 ### 📌 Etapa 3: Sistema de Arquivos (EFS)
 **Status:** ✅ **Concluído**
 
-Foi criado um **File System** (`wordpress-efs`) do tipo Regional.
+Foi criado um File System (`wordpress-efs`) do tipo Regional.
 
 **Configuração:**
-- Mount Targets criados nas **subnets privadas**
+- Mount Targets criados nas subnets privadas
 - Segurança garantida pela associação com o `efs-sg-wordpress`
 
 ---
@@ -50,10 +50,10 @@ Foi criado um **File System** (`wordpress-efs`) do tipo Regional.
 ### 📌 Etapa 4: Banco de Dados (RDS)
 **Status:** ✅ **Concluído**
 
-Foi criada uma instância **RDS MySQL** (`wordpress-db`) do tipo `db.t3.micro`.
+Foi criada uma instância RDS MySQL (`wordpress-db`) do tipo `db.t3.micro`.
 
 **Configuração:**
-- Instância isolada nas subnets privadas através de **DB Subnet Group**
+- Instância isolada nas subnets privadas através de DB Subnet Group
 - Protegida pelo `rds-sg-wordpress`
 - Configurada sem acesso público
 - Banco de dados inicial `wordpress` criado
@@ -63,101 +63,116 @@ Foi criada uma instância **RDS MySQL** (`wordpress-db`) do tipo `db.t3.micro`.
 ### 📌 Etapa 5: Launch Template (Docker)
 **Status:** ✅ **Concluído**
 
-Foi criado um **Launch Template** (`wordpress-docker-lt`) baseado em **Ubuntu 22.04**.
+Foi criado um Launch Template (`wordpress-docker-lt`) baseado em Ubuntu 22.04.
 
 **Automação:**
-- Script `user-data` completo que:
-  - Instala e configura Docker e Docker Compose
-  - Monta o EFS
-  - Inicia o contêiner do WordPress conectado ao RDS e EFS
+Script user-data completo que:
+- Instala e configura Docker e Docker Compose
+- Monta o EFS
+- Inicia o contêiner do WordPress conectado ao RDS e EFS
+
+#### 📜 Script User Data
+
+```bash
+#!/bin/bash
+set -e
+
+# Atualiza a lista de pacotes e instala pré-requisitos
+apt-get update -y
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common nfs-common
+
+# Instala o Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt-get update -y
+apt-get install -y docker-ce docker-ce-cli containerd.io
+
+# Inicia e habilita o serviço do Docker
+systemctl start docker
+systemctl enable docker
+
+# Adiciona o usuário ubuntu ao grupo docker
+usermod -a -G docker ubuntu
+
+# Instala o Docker Compose
+DOCKER_COMPOSE_VERSION="v2.20.2"
+curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
+# Monta o sistema de arquivos EFS
+EFS_ID="<SEU_EFS_ID>"
+EFS_REGION="us-east-1"
+EFS_MOUNT_POINT="/mnt/efs/wordpress"
+mkdir -p ${EFS_MOUNT_POINT}
+mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFS_ID}.efs.${EFS_REGION}.amazonaws.com:/ ${EFS_MOUNT_POINT}
+echo "${EFS_ID}.efs.${EFS_REGION}.amazonaws.com:/ ${EFS_MOUNT_POINT} nfs4 defaults,_netdev 0 0" >> /etc/fstab
+
+# Cria o arquivo docker-compose.yml
+cat <<EOF > /home/ubuntu/docker-compose.yml
+version: '3.8'
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: <SEU_ENDPOINT_RDS>
+      WORDPRESS_DB_USER: admin
+      WORDPRESS_DB_PASSWORD: ***
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - ${EFS_MOUNT_POINT}:/var/www/html
+EOF
+
+# Concede permissões ao usuário ubuntu
+chown -R ubuntu:ubuntu ${EFS_MOUNT_POINT}
+chown ubuntu:ubuntu /home/ubuntu/docker-compose.yml
+
+# Executa o Docker Compose
+/usr/local/bin/docker-compose -f /home/ubuntu/docker-compose.yml up -d
+```
 
 ---
 
-### 📌 Etapa 6: Target Group e Load Balancer
+### 📌 Etapa 6: Target Group, Load Balancer e Auto Scaling
 **Status:** ✅ **Concluído**
 
-Foram criados os componentes para balanceamento de carga:
+Foram criados os componentes finais para alta disponibilidade e escalabilidade:
 
-**Recursos:**
-- **Target Group** (`wordpress-tg`): Agrupa as instâncias do WordPress
-- **Application Load Balancer** (`wordpress-alb`):
-  - Configurado como `Internet-facing`
-  - Posicionado nas subnets públicas
-  - Protegido pelo `alb-sg-wordpress`
-  - Listener configurado para encaminhar tráfego para o `wordpress-tg`
+- **Target Group** (`wordpress-tg`): Criado para agrupar as instâncias
+- **Application Load Balancer** (`wordpress-alb`): Criado nas subnets públicas para distribuir o tráfego
+- **Auto Scaling Group** (`wordpress-asg`): Criado para gerenciar as instâncias nas subnets privadas, com uma capacidade desejada de 2 instâncias e política de escalonamento baseada em CPU
 
 ---
 
-## ✅ Status Atual e Pendências
+## ✅ Status do Projeto: 90% Concluído
 
-### **Progresso Atual**
-Quase toda a infraestrutura foi provisionada com sucesso, incluindo:
-- ✅ Rede e segurança
-- ✅ Camada de dados
-- ✅ Template de automação
-- ✅ Balanceamento de carga
-
-### **⚠️ Desafio Atual**
-O último passo, a criação do **Auto Scaling Group**, não pôde ser concluído.
-
-**Erro Encontrado:**
-```
-You are not authorized to perform this operation
-```
-
-**Causa Provável:**
-Política de segurança da conta (SCP) que impede o serviço de Auto Scaling de utilizar o Launch Template ou seus componentes.
+Toda a infraestrutura foi provisionada e validada com sucesso. O site WordPress está online, acessível através do Application Load Balancer, com as instâncias sendo gerenciadas por um Auto Scaling Group em um ambiente resiliente e distribuído em duas Zonas de Disponibilidade.
 
 ---
 
-## 🚀 Próximos Passos
+## 🚀 Próximos Passos (Opcional)
 
-### 1. Diagnosticar e Criar o Auto Scaling Group
-- [ ] Tentar criar o ASG novamente e analisar mensagem de erro específica
-- [ ] Investigar permissões ausentes (ex: `iam:PassRole`)
-- [ ] Verificar restrições em recursos que o ASG tenta criar (ex: volumes EBS)
-
-### 2. Validação Final
-- [ ] Verificar se o ASG lança 2 instâncias
-- [ ] Confirmar se as instâncias ficam "healthy" no Target Group
-- [ ] Acessar o DNS do Load Balancer para confirmar carregamento do WordPress
+- [ ] Configurar HTTPS no ALB com um certificado do AWS Certificate Manager (ACM)
+- [ ] Configurar um domínio personalizado (ex: via Route 53) para apontar para o DNS do ALB
+- [ ] Implementar monitoramento contínuo da aplicação via CloudWatch
 
 ---
 
 ## ⏸️ Ações para Pausar Custos
 
-Para evitar cobranças desnecessárias, os seguintes recursos devem ser gerenciados:
+Para evitar cobranças, os seguintes recursos devem ser gerenciados:
 
 | Recurso | Ação | Motivo |
 |---|---|---|
-| Application Load Balancer | `Delete` (Excluir) | Cobrança por hora |
-| Instância RDS | `Stop` (Parar) | Reduzir custos computacionais |
-| NAT Gateways | `Delete` (Excluir) | Cobrança por hora + tráfego |
-| Elastic IPs | `Release` (Liberar) | Cobrança por IP não utilizado |
+| Auto Scaling Group | Editar e definir Min/Desired/Max para 0 | Encerra as instâncias EC2 |
+| Application Load Balancer | Delete (Excluir) | Cobrança por hora |
+| Instância RDS | Stop (Parar) | Reduzir custos computacionais |
+| NAT Gateways | Delete (Excluir) | Cobrança por hora + tráfego |
+| Elastic IPs | Release (Liberar) | Cobrança por IP não utilizado |
 
 ---
 
-## 📚 Recursos Criados
-
-### Componentes de Rede
-- VPC: `WordPress-VPC` (10.0.0.0/16)
-- Subnets: 2 públicas + 2 privadas
-- Internet Gateway + 2 NAT Gateways
-
-### Componentes de Segurança
-- 4 Security Groups com regras em camadas
-- Isolamento de tráfego por função
-
-### Componentes de Dados
-- RDS MySQL: `wordpress-db` (db.t3.micro)
-- EFS: `wordpress-efs` (Regional)
-
-### Componentes de Computação
-- Launch Template: `wordpress-docker-lt` (Ubuntu 22.04 + Docker)
-- Target Group: `wordpress-tg`
-- Application Load Balancer: `wordpress-alb`
-
----
-
-**📅 Última Atualização:** [21/09/2025]  
-**🔧 Responsável:** [Thiago Cardoso]
+**📅 Última Atualização:** 22/09/2025
