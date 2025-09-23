@@ -155,9 +155,8 @@ Toda a infraestrutura foi provisionada e validada com sucesso. O site WordPress 
 
 ## 🚀 Próximos Passos (Opcional)
 
-- [ ] Configurar HTTPS no ALB com um certificado do AWS Certificate Manager (ACM)
-- [ ] Configurar um domínio personalizado (ex: via Route 53) para apontar para o DNS do ALB
-- [ ] Implementar monitoramento contínuo da aplicação via CloudWatch
+- [ ] Configurar Scalling Group, health check, etc.
+- [ ] Estudar Terraform para Demonstração.
 
 ---
 
@@ -175,4 +174,28 @@ Para evitar cobranças, os seguintes recursos devem ser gerenciados:
 
 ---
 
-**📅 Última Atualização:** 22/09/2025
+## 🧠 Demonstração com Terraform
+
+**Status:** 🔄 **Em Estudo**
+
+Como próximo passo no aprendizado de DevOps e Infrastructure as Code (IaC), estou estudando **Terraform** para automatizar a criação de toda esta infraestrutura através de código declarativo.
+
+**Objetivos de Aprendizado:**
+- [ ] Converter a infraestrutura manual em código Terraform
+- [ ] Implementar módulos reutilizáveis para componentes
+- [ ] Configurar estado remoto (S3 + DynamoDB)
+- [ ] Aplicar boas práticas de versionamento e organização
+- [ ] Implementar pipelines CI/CD para deploy automatizado
+
+**Benefícios Esperados:**
+- ✅ **Reprodutibilidade:** Infraestrutura versionada e replicável
+- ✅ **Consistência:** Eliminação de erros manuais
+- ✅ **Rastreabilidade:** Histórico de mudanças documentado
+- ✅ **Eficiência:** Deploy e destroy automatizados
+- ✅ **Colaboração:** Infraestrutura como código no repositório
+
+A implementação em Terraform desta arquitetura será documentada em um repositório separado, demonstrando a evolução das práticas manuais para uma abordagem completamente automatizada.
+
+---
+
+**📅 Última Atualização:** 23/09/2025
