@@ -17,10 +17,6 @@ Este projeto implementa uma infraestrutura completa e escalável para WordPress 
 
 ## 🏗️ Arquitetura da Solução
 
-<div align="center">
-    <img src="./assets/images/aws-architecture-diagram.svg" alt="Diagrama da Arquitetura AWS" width="800"/>
-</div>
-
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Internet Gateway                      │
@@ -180,10 +176,6 @@ chown ubuntu:ubuntu /home/ubuntu/docker-compose.yml
 ---
 
 ### ⚖️ Etapa 6: Load Balancing & Auto Scaling
-
-<div align="center">
-    <img src="./assets/images/wordpress-logo.svg" alt="WordPress Logo" width="100"/>
-</div>
 
 Componentes para alta disponibilidade:
 
