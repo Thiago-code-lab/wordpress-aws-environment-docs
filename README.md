@@ -4,6 +4,8 @@
 ![AWS](https://img.shields.io/badge/AWS-Infraestrutura-orange)
 ![WordPress](https://img.shields.io/badge/WordPress-Docker-blue)
 
+![Image](https://github.com/user-attachments/assets/0e5e06f0-90c2-4b97-a66e-6463086840ce)
+
 ## 📋 Visão Geral
 
 Este projeto implementa uma infraestrutura completa e escalável para WordPress na AWS, seguindo as melhores práticas de:
@@ -198,6 +200,10 @@ Componentes para alta disponibilidade:
 
 ### 🎉 **100% CONCLUÍDO E FUNCIONAL** 🎉
 
+<img width="1919" height="950" alt="Image" src="https://github.com/user-attachments/assets/0ab823f0-143f-4a1d-9741-538e7e37cfdc" />
+
+</div>
+
 ✅ Infraestrutura provisionada  
 ✅ Ambiente testado e validado  
 ✅ WordPress online via ALB  
@@ -216,10 +222,6 @@ Componentes para alta disponibilidade:
 
 **Objetivos de Aprendizado:**
 - [ ] Conversão da infraestrutura para código Terraform
-- [ ] Implementação de módulos reutilizáveis
-- [ ] Estado remoto (S3 + DynamoDB)
-- [ ] Pipelines CI/CD automatizados
-- [ ] Versionamento e boas práticas IaC
 
 **Benefícios Esperados:**
 - ✅ **Reprodutibilidade** - Infraestrutura versionada
