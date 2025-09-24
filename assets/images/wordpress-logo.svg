@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fundo circular -->
+    <circle cx="100" cy="100" r="90" fill="#21759b"/>
+    
+    <!-- Letra W -->
+    <path d="M 40 70 L 55 130 L 70 85 L 85 130 L 100 70" 
+          stroke="#fff" 
+          stroke-width="10" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          fill="none"/>
+    
+    <!-- Círculo -->
+    <circle cx="140" cy="100" r="30" fill="#fff" stroke="#21759b" stroke-width="5"/>
+    
+    <!-- Texto WordPress -->
+    <text x="100" y="170" 
+          font-family="Arial, sans-serif" 
+          font-size="20" 
+          font-weight="bold" 
+          text-anchor="middle" 
+          fill="#fff">WordPress</text>
+</svg>
