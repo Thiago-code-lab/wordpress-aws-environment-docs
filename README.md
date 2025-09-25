@@ -118,27 +118,29 @@ Launch Template com automação Docker:
 #!/bin/bash
 set -e
 
-# Atualiza sistema e instala dependências
+# Atualiza a lista de pacotes e instala pré-requisitos
 apt-get update -y
 apt-get install -y apt-transport-https ca-certificates curl software-properties-common nfs-common
 
-# Instala Docker
+# Instala o Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt-get update -y
 apt-get install -y docker-ce docker-ce-cli containerd.io
 
-# Configura Docker
+# Inicia e habilita o serviço do Docker
 systemctl start docker
 systemctl enable docker
+
+# Adiciona o usuário ubuntu ao grupo docker
 usermod -a -G docker ubuntu
 
-# Instala Docker Compose
+# Instala o Docker Compose
 DOCKER_COMPOSE_VERSION="v2.20.2"
 curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
-# Monta EFS
+# Monta o sistema de arquivos EFS
 EFS_ID="<SEU_EFS_ID>"
 EFS_REGION="us-east-1"
 EFS_MOUNT_POINT="/mnt/efs/wordpress"
@@ -146,7 +148,7 @@ mkdir -p ${EFS_MOUNT_POINT}
 mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFS_ID}.efs.${EFS_REGION}.amazonaws.com:/ ${EFS_MOUNT_POINT}
 echo "${EFS_ID}.efs.${EFS_REGION}.amazonaws.com:/ ${EFS_MOUNT_POINT} nfs4 defaults,_netdev 0 0" >> /etc/fstab
 
-# Cria configuração Docker Compose
+# Cria o arquivo docker-compose.yml
 cat <<EOF > /home/ubuntu/docker-compose.yml
 version: '3.8'
 services:
@@ -157,19 +159,19 @@ services:
     ports:
       - "80:80"
     environment:
-      WORDPRESS_DB_HOST: <SEU_ENDPOINT_RDS>
-      WORDPRESS_DB_USER: admin
-      WORDPRESS_DB_PASSWORD: ***
-      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_HOST: "<SEU_ENDPOINT_RDS>:3306"
+      WORDPRESS_DB_USER: "<SEU_USUARIO_RDS>"
+      WORDPRESS_DB_PASSWORD: "<SUA_SENHA_RDS>"
+      WORDPRESS_DB_NAME: "<SEU_NOME_DO_BANCO>"
     volumes:
       - ${EFS_MOUNT_POINT}:/var/www/html
 EOF
 
-# Define permissões
+# Concede permissões ao usuário ubuntu
 chown -R ubuntu:ubuntu ${EFS_MOUNT_POINT}
 chown ubuntu:ubuntu /home/ubuntu/docker-compose.yml
 
-# Inicia aplicação
+# Executa o Docker Compose
 /usr/local/bin/docker-compose -f /home/ubuntu/docker-compose.yml up -d
 ```
 
@@ -211,24 +213,6 @@ Componentes para alta disponibilidade:
 ✅ Alta disponibilidade Multi-AZ  
 
 </div>
-
----
-
-## 🚀 Roadmap - Melhorias Futuras
-
-### 🧠 Evolução para IaC (Terraform)
-
-**Status**: 🔄 Em Estudo
-
-**Objetivos de Aprendizado:**
-- [ ] Conversão da infraestrutura para código Terraform
-
-**Benefícios Esperados:**
-- ✅ **Reprodutibilidade** - Infraestrutura versionada
-- ✅ **Consistência** - Eliminação de erros manuais  
-- ✅ **Rastreabilidade** - Histórico de mudanças
-- ✅ **Eficiência** - Deploy/destroy automatizado
-- ✅ **Colaboração** - Código no repositório
 
 ---
 
