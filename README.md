@@ -299,7 +299,7 @@ df -h | grep efs
 
 <div align="center">
 
-**📅 Última Atualização**: 24/09/2025  
+**📅 Última Atualização**: 25/09/2025  
 **👨‍💻 Desenvolvido por**: Thiago Cardoso 
 **🏷️ Versão**: 1.0.0  
 
