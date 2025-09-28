@@ -60,6 +60,8 @@ Criação da infraestrutura de rede base:
 | **NAT Gateways** | 2 unidades (uma por AZ) |
 | **Route Tables** | Configuradas automaticamente |
 
+<img width="1659" height="435" alt="Image" src="https://github.com/user-attachments/assets/24a0fdf2-7c51-4658-ade6-1b150a7c0685" />
+
 ---
 
 ### 🔒 Etapa 2: Segurança (Security Groups)
