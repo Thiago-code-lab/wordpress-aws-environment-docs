@@ -200,7 +200,9 @@ Componentes para alta disponibilidade:
 
 <div align="center">
 
-### 🎉 **100% CONCLUÍDO E FUNCIONAL** 🎉
+<img width="1919" height="986" alt="Image" src="https://github.com/user-attachments/assets/575303ac-9b50-4b13-94cd-63b60587d3bc" />
+
+<img width="1919" height="986" alt="Image" src="https://github.com/user-attachments/assets/263a4f16-b59c-49c6-beb5-91dc28cfc37d" />
 
 <img width="1919" height="950" alt="Image" src="https://github.com/user-attachments/assets/0ab823f0-143f-4a1d-9741-538e7e37cfdc" />
 
@@ -299,7 +301,7 @@ df -h | grep efs
 
 <div align="center">
 
-**📅 Última Atualização**: 25/09/2025  
+**📅 Última Atualização**: 28/09/2025  
 **👨‍💻 Desenvolvido por**: Thiago Cardoso 
 **🏷️ Versão**: 1.0.0  
 
